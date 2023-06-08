@@ -245,4 +245,4 @@ function consulting_thinkup_widgets_init() {
 }
 add_action( 'widgets_init', 'consulting_thinkup_widgets_init' );
 
-include_once('./wp-content/themes/consulting/lib/kgwg_functions/kgwg_functions.php');
+include_once('./wp-content/kgwg/kgwg_functions/kgwg_functions.php');
