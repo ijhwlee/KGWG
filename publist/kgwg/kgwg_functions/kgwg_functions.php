@@ -82,6 +82,10 @@ add_shortcode('get_query', 'wpb_kgwg_get_query');
 function wpb_kgwg_list_years($attrs) {
   $s_year = $attrs['start'];
   $e_year = $attrs['end'];
+  $c_year = date("Y");
+  if ((int)$c_year > (int)$e_year) {
+    $e_year = $c_year;
+  }
   $message = "<ul>";
   for ($y=(int)$s_year; $y <= (int)$e_year; $y++) {
     $message .= "<li><a href=\"/list-of-publications-for-kgwg-in-year-2018/?pub_year=".$y."\">Year ".$y."</a></li>";

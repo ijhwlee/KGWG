@@ -37,6 +37,38 @@ else:
   print("ERROR- Author list file {0} does not exist, please specify a correct file name.".format(author_file_name))
   exit(-1)
 
+exclude_file_name = "kgwg_excl_journals.dat"
+if os.path.exists(exclude_file_name):
+  pass
+else:
+  exclude_file_name = ""
+  print("ERROR- Exclude jouranl list file {0} does not exist, please specify a correct file name.\n      No journal will be excluded, so the list may include wrong ones".format(exclude_file_name))
+
+exclude_bibcode_file_name = "kgwg_excl_bibcodes.dat"
+if os.path.exists(exclude_bibcode_file_name):
+  pass
+else:
+  exclude_bibcode_file_name = ""
+  print("ERROR- Exclude bibcode list file {0} does not exist, please specify a correct file name.".format(exclude_bibcode_file_name))
+
+def get_exclude_journals(file_name):
+  exclude_journals = []
+  if len(file_name) > 0:
+    with open(file_name, "r") as author_file:
+      lines = author_file.read()
+      authors = lines.split('\n')
+    exclude_journals = [author for author in authors if len(author)>0]
+  return exclude_journals
+
+def get_exclude_bibcodes(file_name):
+  exclude_journals = []
+  if len(file_name) > 0:
+    with open(file_name, "r") as author_file:
+      lines = author_file.read()
+      authors = lines.split('\n')
+    exclude_journals = [author for author in authors if len(author)>0]
+  return exclude_journals
+
 def get_title(bibitem):
   lines = bibitem.split('\n')
   for line in lines:
@@ -120,6 +152,10 @@ def convert_journal(journal):
     return "Phys. Rev. Lett."
   elif '\\prx' in journal:
     return "Phys. Rev. X"
+  elif '\\pra' in journal:
+    return "Phys. Rev. A"
+  elif '\\prb' in journal:
+    return "Phys. Rev. B"
   elif '\\apj' in journal:
     return "Astro. Phys. J."
   elif '\\apjl' in journal:
@@ -309,18 +345,53 @@ def mk_link_string(bibitem, add_title):
   year = get_year(bibitem)
   link_string = author
   if len(journal) > 0:
-    link_string += ", "+journal
+    link_string += ", <span style=\"color: green;\">"+journal
+  else:
+    link_string += ", <span style=\"color: green;\">"
   if len(volume) > 0:
     link_string += " "+volume
   if len(pages) > 0:
     link_string += ", "+pages
   if len(year) > 0:
     link_string += "("+year+")"
+  link_string += "</span>"
   if add_title:
     title = get_title(bibitem)
     if len(title) > 0:
-      link_string += ", \""+title+"\""
+      link_string += ", <span style=\"color: black;\">\""+title+"\"</span>"
   return link_string
+
+def exclude_journals(bibitems, bibcodes, journals):
+  bibitems_new = []
+  bibcodes_new = []
+  for idx in range(len(bibitems)):
+    journal = get_journal(bibitems[idx]).upper()
+    exclude = False
+    for idx1 in range(len(journals)):
+      journal1 = journals[idx1].upper()
+      if journal1 in journal:
+        exclude = True
+        break
+    #print("journal = {0}, Exclude = {1}".format(journal, exclude))
+    if not exclude:
+      bibitems_new.append(bibitems[idx])
+      bibcodes_new.append(bibcodes[idx])
+  return bibitems_new, bibcodes_new
+
+def exclude_bibcodes(bibitems, bibcodes, excludes):
+  bibitems_new = []
+  bibcodes_new = []
+  for idx in range(len(bibitems)):
+    bibcode = bibcodes[idx]
+    exclude = False
+    for idx1 in range(len(excludes)):
+      if excludes[idx1] in bibcode:
+        exclude = True
+        break
+    if not exclude:
+      bibitems_new.append(bibitems[idx])
+      bibcodes_new.append(bibcodes[idx])
+  return bibitems_new, bibcodes_new
 
 def get_bibitems_year(file_name, year):
   #url = "https://api.adsabs.harvard.edu/v1/search/query?q=((%3Dauthor%3A%22Lee,H.M.%22%20or%20%3Dauthor%3A%22Lee,Hyung%20Mok%22)%20AND%20year%3A"+str(year)+")&fl=bibcode&rows=200&sort=date%20desc%2C%20bibcode%20desc"
@@ -342,19 +413,31 @@ def get_bibitems_year(file_name, year):
     bibcodes0 = get_bibcodes(authors[idx], year)
     bibcodes = list(set(bibcodes) | set(bibcodes0)) #exclude the same bibcode
 
+  excl_journals = get_exclude_journals(exclude_file_name)
+  if len(excl_journals) > 0:
+    print("Following jounrals will be excluded from the list : {0}".format(excl_journals))
+
+  excl_bibcodes = get_exclude_bibcodes(exclude_bibcode_file_name)
+  if len(excl_bibcodes) > 0:
+    print("Following bibcodes will be excluded from the list : {0}".format(excl_bibcodes))
+
   exports = {'bibcode':bibcodes , 'sort':'no sort', 'maxauthor':3}
   bibtex = requests.post(bibtex_url,  headers={'Authorization': 'Bearer ' + token, 'Content-Type':'application/json'}, json=exports)
   #print(bibtex.json())
-  print("=====================================================================================================")
-  print("     Total {0} bibitems for year {1}".format(len(bibcodes), year))
-  print("=====================================================================================================")
+  total_papers = len(bibcodes)
   bibitems = bibtex.json()['export']
   #bibitems1 = bibitems.split('@')
   bibitems1 = get_bibitem_list(bibitems)
   bibitems2 = [bibitem for bibitem in bibitems1 if len(bibitem) > 0]
   print("len(bibitems) = {0}, len(bibitems) = {1}, len(bibitems2) = {2}, len(bibcodes) = {3}".format(len(bibitems), len(bibitems1), len(bibitems2), len(bibcodes)))
+  bibitems2, bibcodes = exclude_journals(bibitems2, bibcodes, excl_journals)
+  bibitems2, bibcodes = exclude_bibcodes(bibitems2, bibcodes, excl_bibcodes)
+  print("len(bibitems2) = {0}, len(bibcodes) = {1} after some journals excluded.".format(len(bibitems2), len(bibcodes)))
   bibitem_full, bibcodes_full, bibitem_short, bibcodes_short = get_full_short_authors(bibitems2, bibcodes)
   print("len(bibitem_full) = {0}, len(bibcodes_full) = {1}, len(bibitem_short) = {2}, len(bibcodes_short) = {3}".format(len(bibitem_full), len(bibcodes_full), len(bibitem_short), len(bibcodes_short)))
+  print("=====================================================================================================")
+  print("     Total {0} bibitems for year {1}, excluded {2} papers".format(len(bibcodes), year, (total_papers - len(bibcodes))))
+  print("=====================================================================================================")
   #print("==== Bibitems ==========\n")
   #for idx in range(len(bibitems2)):
   #  print("bibitems2[{0}] :{1}\n".format(idx, bibitems2[idx]))
