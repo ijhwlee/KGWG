@@ -86,11 +86,33 @@ function wpb_kgwg_list_years($attrs) {
   if ((int)$c_year > (int)$e_year) {
     $e_year = $c_year;
   }
-  $message = "<ul>";
+  // simple <ul>
+  //$message = "<ul>";
+  //for ($y=(int)$s_year; $y <= (int)$e_year; $y++) {
+  //  $message .= "<li><a href=\"/list-of-publications-for-kgwg-in-year-2018/?pub_year=".$y."\">Year ".$y."</a></li>";
+  //}
+  //$message .= "</ul>";
+  // using table
+  $columns = 8;
+  $message = "<table class='table table-striped'> <tbody>";
+  $count = 0;
   for ($y=(int)$s_year; $y <= (int)$e_year; $y++) {
-    $message .= "<li><a href=\"/list-of-publications-for-kgwg-in-year-2018/?pub_year=".$y."\">Year ".$y."</a></li>";
+    if ($count==0) {
+      $message .= "<tr class='table-secondary'>";
+    }
+    else if ($count%$columns == 0 and $y < (int)$e_year) {
+      $message .= "</tr><tr class='table-secondary'>";
+    }
+    else if ($count%$columns == 0) {
+      $message .= "</tr>";
+    }
+    $message .= "<td><a href=\"/list-of-publications-for-kgwg-in-year-2018/?pub_year=".$y."\">Year ".$y."</a></td>";
+    $count++;
   }
-  $message .= "</ul>";
+  if ($count%$columns != 0) {
+      $message .= "</tr>";
+  }
+  $message .= "</tbody></table>";
   return $message;
 }
 add_shortcode('list_years', 'wpb_kgwg_list_years');
@@ -111,3 +133,15 @@ function wpb_kgwg_change_title() {
 }
 add_shortcode('change_title', 'wpb_kgwg_change_title');
 
+function wpb_kgwg_add_bootstrap() {
+  // Register style & scripts
+  //wp_register_style('kgwg-bootstrap-style', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+  //wp_register_script('kgwg-bootstarp-script', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js', array(), '0.1', true);
+  wp_register_style('kgwg-bootstrap-style', '/wp-content/kgwg/kgwg_css/bootstrap.min.css');
+  wp_register_script('kgwg-bootstarp-script', '/wp-content/kgwg/kgwg_js/bootstrap.bundle.min.js', array(), '0.1', true);
+
+  // Enqueue kgwg styles & scripts
+  wp_enqueue_style('kgwg-bootstrap-style');
+  wp_enqueue_script('kgwg-bootstrap-script');
+}
+add_action('wp_enqueue_scripts', 'wpb_kgwg_add_bootstrap');
