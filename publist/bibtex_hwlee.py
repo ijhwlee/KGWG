@@ -166,6 +166,8 @@ def convert_journal(journal):
     return "Astro. Astrophys."
   elif '\\mnras' in journal:
     return "Mon. Not. Roy. Astro. Soc."
+  elif '\\nar' in journal:
+    return "New Astronomy Reviews"
   else:
     return journal
 
@@ -369,6 +371,7 @@ def exclude_journals(bibitems, bibcodes, journals):
     exclude = False
     for idx1 in range(len(journals)):
       journal1 = journals[idx1].upper()
+      #print("journal = {0}, journal1 = {1}".format(journal, journal1))
       if journal1 in journal:
         exclude = True
         break
