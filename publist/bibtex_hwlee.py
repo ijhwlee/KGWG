@@ -51,6 +51,22 @@ else:
   exclude_bibcode_file_name = ""
   print("ERROR- Exclude bibcode list file {0} does not exist, please specify a correct file name.".format(exclude_bibcode_file_name))
 
+exclude_title_word_file_name = "kgwg_excl_title_words.dat"
+if os.path.exists(exclude_title_word_file_name):
+  pass
+else:
+  exclude_title_word_file_name = ""
+  print("ERROR- Exclude title word list file {0} does not exist, please specify a correct file name.".format(exclude_title_word_file_name))
+
+def get_exclude_title_words(file_name):
+  exclude_journals = []
+  if len(file_name) > 0:
+    with open(file_name, "r") as author_file:
+      lines = author_file.read()
+      authors = lines.split('\n')
+    exclude_journals = [author for author in authors if len(author)>0]
+  return exclude_journals
+
 def get_exclude_journals(file_name):
   exclude_journals = []
   if len(file_name) > 0:
@@ -168,6 +184,8 @@ def convert_journal(journal):
     return "Mon. Not. Roy. Astro. Soc."
   elif '\\nar' in journal:
     return "New Astronomy Reviews"
+  elif '\\memsai' in journal:
+    return "Memorie della Societa Astronomica Italiana"
   else:
     return journal
 
@@ -381,6 +399,24 @@ def exclude_journals(bibitems, bibcodes, journals):
       bibcodes_new.append(bibcodes[idx])
   return bibitems_new, bibcodes_new
 
+def exclude_title_words(bibitems, bibcodes, journals):
+  bibitems_new = []
+  bibcodes_new = []
+  for idx in range(len(bibitems)):
+    journal = get_title(bibitems[idx]).upper()
+    exclude = False
+    for idx1 in range(len(journals)):
+      journal1 = journals[idx1].upper()
+      #print("journal = {0}, journal1 = {1}".format(journal, journal1))
+      if journal1 in journal:
+        exclude = True
+        break
+    #print("journal = {0}, Exclude = {1}".format(journal, exclude))
+    if not exclude:
+      bibitems_new.append(bibitems[idx])
+      bibcodes_new.append(bibcodes[idx])
+  return bibitems_new, bibcodes_new
+
 def exclude_bibcodes(bibitems, bibcodes, excludes):
   bibitems_new = []
   bibcodes_new = []
@@ -424,6 +460,10 @@ def get_bibitems_year(file_name, year):
   if len(excl_bibcodes) > 0:
     print("Following bibcodes will be excluded from the list : {0}".format(excl_bibcodes))
 
+  excl_title_words = get_exclude_title_words(exclude_title_word_file_name)
+  if len(excl_title_words) > 0:
+    print("Papers with the following wrods included in title will be excluded from the list : {0}".format(excl_title_words))
+
   exports = {'bibcode':bibcodes , 'sort':'no sort', 'maxauthor':3}
   bibtex = requests.post(bibtex_url,  headers={'Authorization': 'Bearer ' + token, 'Content-Type':'application/json'}, json=exports)
   #print(bibtex.json())
@@ -435,6 +475,7 @@ def get_bibitems_year(file_name, year):
   print("len(bibitems) = {0}, len(bibitems) = {1}, len(bibitems2) = {2}, len(bibcodes) = {3}".format(len(bibitems), len(bibitems1), len(bibitems2), len(bibcodes)))
   bibitems2, bibcodes = exclude_journals(bibitems2, bibcodes, excl_journals)
   bibitems2, bibcodes = exclude_bibcodes(bibitems2, bibcodes, excl_bibcodes)
+  bibitems2, bibcodes = exclude_title_words(bibitems2, bibcodes, excl_title_words)
   print("len(bibitems2) = {0}, len(bibcodes) = {1} after some journals excluded.".format(len(bibitems2), len(bibcodes)))
   bibitem_full, bibcodes_full, bibitem_short, bibcodes_short = get_full_short_authors(bibitems2, bibcodes)
   print("len(bibitem_full) = {0}, len(bibcodes_full) = {1}, len(bibitem_short) = {2}, len(bibcodes_short) = {3}".format(len(bibitem_full), len(bibcodes_full), len(bibitem_short), len(bibcodes_short)))
