@@ -42,21 +42,37 @@ if os.path.exists(exclude_file_name):
   pass
 else:
   exclude_file_name = ""
-  print("ERROR- Exclude jouranl list file {0} does not exist, please specify a correct file name.\n      No journal will be excluded, so the list may include wrong ones".format(exclude_file_name))
+  print("WARNING- Exclude jouranl list file {0} does not exist, please specify a correct file name.\n      No journal will be excluded, so the list may include wrong ones".format(exclude_file_name))
 
 exclude_bibcode_file_name = "kgwg_excl_bibcodes.dat"
 if os.path.exists(exclude_bibcode_file_name):
   pass
 else:
   exclude_bibcode_file_name = ""
-  print("ERROR- Exclude bibcode list file {0} does not exist, please specify a correct file name.".format(exclude_bibcode_file_name))
+  print("WARNING- Exclude bibcode list file {0} does not exist, please specify a correct file name.".format(exclude_bibcode_file_name))
 
 exclude_title_word_file_name = "kgwg_excl_title_words.dat"
 if os.path.exists(exclude_title_word_file_name):
   pass
 else:
   exclude_title_word_file_name = ""
-  print("ERROR- Exclude title word list file {0} does not exist, please specify a correct file name.".format(exclude_title_word_file_name))
+  print("WARNING- Exclude title word list file {0} does not exist, please specify a correct file name.".format(exclude_title_word_file_name))
+
+filter_file_name = "kgwg_filter.dat"
+if os.path.exists(filter_file_name):
+  pass
+else:
+  filter_file_name = ""
+  print("WARNING- Extra filter file {0} does not exist, please specify a correct file name.\n      No extra filter will be applied.".format(filter_file_name))
+
+def get_extra_filter(file_name):
+  exclude_journals = []
+  if len(file_name) > 0:
+    with open(file_name, "r") as author_file:
+      lines = author_file.read()
+      authors = lines.split('\n')
+    exclude_journals = [author for author in authors if len(author)>0]
+  return exclude_journals
 
 def get_exclude_title_words(file_name):
   exclude_journals = []
@@ -237,19 +253,29 @@ def generate_ol(year, bibitems, bibcodes):
 
 def generate_full(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_full.html"
-  with open(html_file, "w") as text_file:
-    text_file.write("<ol>\n")
-    for idx in range(len(bibitems)):
-      generate_list_item(text_file, bibitems[idx], bibcodes[idx])
-    text_file.write("</ol>\n")
+  if len(bibitems) > 0:
+    with open(html_file, "w") as text_file:
+      text_file.write("<ol>\n")
+      for idx in range(len(bibitems)):
+        generate_list_item(text_file, bibitems[idx], bibcodes[idx])
+      text_file.write("</ol>\n")
+  else:
+    with open(html_file, "w") as text_file:
+      text_file.write("<p>\n")
+      text_file.write("No publications found.</p>\n")
 
 def generate_short(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_short.html"
-  with open(html_file, "w") as text_file:
-    text_file.write("<ol>\n")
-    for idx in range(len(bibitems)):
-      generate_list_item(text_file, bibitems[idx], bibcodes[idx])
-    text_file.write("</ol>\n")
+  if len(bibitems) > 0:
+    with open(html_file, "w") as text_file:
+      text_file.write("<ol>\n")
+      for idx in range(len(bibitems)):
+        generate_list_item(text_file, bibitems[idx], bibcodes[idx])
+      text_file.write("</ol>\n")
+  else:
+    with open(html_file, "w") as text_file:
+      text_file.write("<p>\n")
+      text_file.write("No publications found.</p>\n")
 
 #def generate_html(year, bibitems, bibcodes):
 def generate_html(year, bibitems_full, bibcodes_full, bibitems_short, bibcodes_short):
@@ -292,7 +318,15 @@ def get_bibitem_list(bibitems):
   return bibitems1
 
 def get_bibcodes(author, year):
-  url = "https://api.adsabs.harvard.edu/v1/search/query?q=(%3Dauthor%3A%22"+author+"%22%20AND%20year%3A"+str(year)+")&fl=bibcode&rows=200&sort=date%20desc%2C%20bibcode%20desc"
+  extra_filter = get_extra_filter(filter_file_name)
+  if len(extra_filter) == 0: # use default author and year query
+    #print("Using standard query using authors and year.")
+    url = "https://api.adsabs.harvard.edu/v1/search/query?q=(%3Dauthor%3A%22"+author+"%22%20AND%20year%3A"+str(year)+")&fl=bibcode&rows=200&sort=date%20desc%2C%20bibcode%20desc"
+  else: # use extra filter
+    #print("Using standard query with extra filter.")
+    extra_filter[0] = extra_filter[0].replace(":", "%3A")
+    extra_filter[0] = extra_filter[0].replace("\"", "%22")
+    url = "https://api.adsabs.harvard.edu/v1/search/query?q=(%3Dauthor%3A%22"+author+"%22%20AND%20year%3A"+str(year)+"%20AND%20"+extra_filter[0]+")&fl=bibcode&rows=200&sort=date%20desc%2C%20bibcode%20desc"
   #query is https://api.adsabs.harvard.edu/v1/search/query?q=((=author:"Lee, H.M." or =author:"Lee, Hyung Mok") and year:2022)&fl=bibcode&rows=200&sort=date+desc,bibcode+desc
 
   # the query parameters can be included as part of the URL
@@ -464,35 +498,38 @@ def get_bibitems_year(file_name, year):
   if len(excl_title_words) > 0:
     print("Papers with the following wrods included in title will be excluded from the list : {0}".format(excl_title_words))
 
-  exports = {'bibcode':bibcodes , 'sort':'no sort', 'maxauthor':3}
-  bibtex = requests.post(bibtex_url,  headers={'Authorization': 'Bearer ' + token, 'Content-Type':'application/json'}, json=exports)
-  #print(bibtex.json())
-  total_papers = len(bibcodes)
-  bibitems = bibtex.json()['export']
-  #bibitems1 = bibitems.split('@')
-  bibitems1 = get_bibitem_list(bibitems)
-  bibitems2 = [bibitem for bibitem in bibitems1 if len(bibitem) > 0]
-  print("len(bibitems) = {0}, len(bibitems) = {1}, len(bibitems2) = {2}, len(bibcodes) = {3}".format(len(bibitems), len(bibitems1), len(bibitems2), len(bibcodes)))
-  bibitems2, bibcodes = exclude_journals(bibitems2, bibcodes, excl_journals)
-  bibitems2, bibcodes = exclude_bibcodes(bibitems2, bibcodes, excl_bibcodes)
-  bibitems2, bibcodes = exclude_title_words(bibitems2, bibcodes, excl_title_words)
-  print("len(bibitems2) = {0}, len(bibcodes) = {1} after some journals excluded.".format(len(bibitems2), len(bibcodes)))
-  bibitem_full, bibcodes_full, bibitem_short, bibcodes_short = get_full_short_authors(bibitems2, bibcodes)
-  print("len(bibitem_full) = {0}, len(bibcodes_full) = {1}, len(bibitem_short) = {2}, len(bibcodes_short) = {3}".format(len(bibitem_full), len(bibcodes_full), len(bibitem_short), len(bibcodes_short)))
-  print("=====================================================================================================")
-  print("     Total {0} bibitems for year {1}, excluded {2} papers".format(len(bibcodes), year, (total_papers - len(bibcodes))))
-  print("=====================================================================================================")
-  #print("==== Bibitems ==========\n")
-  #for idx in range(len(bibitems2)):
-  #  print("bibitems2[{0}] :{1}\n".format(idx, bibitems2[idx]))
-  #print("==== Bibcodes ==========\n")
-  #for idx in range(len(bibcodes)):
-  #  print("bibcodes[{0}] :{1}\n".format(idx, bibcodes[idx]))
-  file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+".bib"
-  with open(file_name, "w") as text_file:
-    text_file.write("{0}".format(bibitems))
-  #generate_html(year, bibitems2, bibcodes)
-  generate_html(year, bibitem_full, bibcodes_full, bibitem_short, bibcodes_short)
+  if len(bibcodes) > 0:
+    exports = {'bibcode':bibcodes , 'sort':'no sort', 'maxauthor':3}
+    bibtex = requests.post(bibtex_url,  headers={'Authorization': 'Bearer ' + token, 'Content-Type':'application/json'}, json=exports)
+    print(bibtex.json())
+    total_papers = len(bibcodes)
+    bibitems = bibtex.json()['export']
+    #bibitems1 = bibitems.split('@')
+    bibitems1 = get_bibitem_list(bibitems)
+    bibitems2 = [bibitem for bibitem in bibitems1 if len(bibitem) > 0]
+    print("len(bibitems) = {0}, len(bibitems) = {1}, len(bibitems2) = {2}, len(bibcodes) = {3}".format(len(bibitems), len(bibitems1), len(bibitems2), len(bibcodes)))
+    bibitems2, bibcodes = exclude_journals(bibitems2, bibcodes, excl_journals)
+    bibitems2, bibcodes = exclude_bibcodes(bibitems2, bibcodes, excl_bibcodes)
+    bibitems2, bibcodes = exclude_title_words(bibitems2, bibcodes, excl_title_words)
+    print("len(bibitems2) = {0}, len(bibcodes) = {1} after some journals excluded.".format(len(bibitems2), len(bibcodes)))
+    bibitem_full, bibcodes_full, bibitem_short, bibcodes_short = get_full_short_authors(bibitems2, bibcodes)
+    print("len(bibitem_full) = {0}, len(bibcodes_full) = {1}, len(bibitem_short) = {2}, len(bibcodes_short) = {3}".format(len(bibitem_full), len(bibcodes_full), len(bibitem_short), len(bibcodes_short)))
+    print("=====================================================================================================")
+    print("     Total {0} bibitems for year {1}, excluded {2} papers".format(len(bibcodes), year, (total_papers - len(bibcodes))))
+    print("=====================================================================================================")
+    #print("==== Bibitems ==========\n")
+    #for idx in range(len(bibitems2)):
+    #  print("bibitems2[{0}] :{1}\n".format(idx, bibitems2[idx]))
+    #print("==== Bibcodes ==========\n")
+    #for idx in range(len(bibcodes)):
+    #  print("bibcodes[{0}] :{1}\n".format(idx, bibcodes[idx]))
+    file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+".bib"
+    with open(file_name, "w") as text_file:
+      text_file.write("{0}".format(bibitems))
+    #generate_html(year, bibitems2, bibcodes)
+    generate_html(year, bibitem_full, bibcodes_full, bibitem_short, bibcodes_short)
+  else: # no data found
+    generate_html(year, [], [], [], [])
 
 for year in range(current_year - 2, current_year+1):
   get_bibitems_year(author_file_name, year)
