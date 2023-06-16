@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import datetime
 
-MIN_AUTHORS_COLL = 15
+MIN_AUTHORS_COLL = 100 
 
 if len(sys.argv) > 1 and not sys.argv[1].isnumeric():
   print("Usage: python3 {0} yyyy [file_name]\n       Second argument should be a number(zero for the current year).".format(sys.argv[0]))
@@ -215,6 +215,8 @@ def get_journal(bibitem):
       ref_type = 'BOOK'
     elif 'INPROCEEDINGS' in line:
       ref_type = 'INPROCEEDINGS'
+    elif 'PROCEEDINGS' in line:
+      ref_type = 'PROCEEDINGS'
 
     if ref_type=='ARTICLE' and 'journal' in line:
       start = line.find('= {')
@@ -232,6 +234,12 @@ def get_journal(bibitem):
       end = line.find('},$')
       title = line[start+3: end-1]
       return title
+    if ref_type=='PROCEEDINGS' and 'booktitle' in line:
+      start = line.find('= {')
+      end = line.find('},$')
+      title = line[start+3: end-1]
+      return title
+  return "NO TITLE"
 
 def generate_list_item(text_file, bibitem, bibcode):
   text_file.write("<li>")
@@ -363,7 +371,12 @@ def mk_short_list(author):
 def is_full_author(bibitem):
   is_full = False
   author = get_author(bibitem)
-  count = count_authors(author)
+  if author is None:
+    author = "No Author"
+    count = 0
+  else:
+    #print("bibitem = {0}, author = {1}".format(bibitem, author))
+    count = count_authors(author)
   if 'et al.' in author or count > MIN_AUTHORS_COLL:
     is_full = True
   #print("Author = {0}, Full_author = {1}, Count = {2}".format(author, is_full, count))
@@ -390,7 +403,12 @@ def get_full_short_authors(bibitems, bibcodes):
 def mk_link_string(bibitem, add_title):
   link_string = ""
   author = get_author(bibitem)
-  count = count_authors(author)
+  if author is None:
+    author = "No Author"
+    count = 0
+  else:
+    #print("bibitem = {0}, author = {1}".format(bibitem, author))
+    count = count_authors(author)
   if count > MIN_AUTHORS_COLL:
     author = mk_short_list(author)
   journal = get_journal(bibitem)
