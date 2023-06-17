@@ -271,6 +271,9 @@ def generate_full(year, bibitems, bibcodes):
     with open(html_file, "w") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
+  with open(html_file, "a") as text_file:
+    #put a download button as bib file
+    text_file.write("<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_"+str(year)+"_"+current_month_text+"_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>")
 
 def generate_short(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_short.html"
@@ -544,6 +547,10 @@ def get_bibitems_year(file_name, year):
     file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+".bib"
     with open(file_name, "w") as text_file:
       text_file.write("{0}".format(bibitems))
+    file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+"_full.bib"
+    with open(file_name, "w") as text_file:
+      full_str = ''.join(map(str, bibitem_full))
+      text_file.write("{0}".format(full_str))
     #generate_html(year, bibitems2, bibcodes)
     generate_html(year, bibitem_full, bibcodes_full, bibitem_short, bibcodes_short)
   else: # no data found
