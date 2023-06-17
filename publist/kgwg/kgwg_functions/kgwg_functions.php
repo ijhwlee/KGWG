@@ -49,7 +49,7 @@ function wpb_kgwg_publications($attrs) {
     fclose($myfile);
     $message = '<h1>Collaboration Papers</h1>';
     $message .= $content;
-    //$message .= "<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_".$pub_year."_Jun_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>";
+    $message .= "<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_".$pub_year."_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>";
     if ($no_short) {
       return $message;
     }

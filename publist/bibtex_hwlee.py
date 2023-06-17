@@ -259,6 +259,32 @@ def generate_ol(year, bibitems, bibcodes):
       generate_list_item(text_file, bibitems[idx], bibcodes[idx])
     text_file.write("</ol>\n")
 
+def generate_full_tex(year, bibitems):
+  html_file = "kgwg_publications_"+str(year)+"_full.tex"
+  if len(bibitems) > 0:
+    with open(html_file, "w") as text_file:
+      text_file.write("\\documentclass{article}\n")
+      text_file.write("\\begin{document}\n")
+      text_file.write("\\nocite{*}\n")
+      text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
+      text_file.write("\\bibliographstyle{plain}\n")
+      text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full.bib}\n")
+      text_file.write("\\end{document}\n")
+  else:
+    with open(html_file, "w") as text_file:
+      text_file.write("\\documentclass{article}\n")
+      text_file.write("\\begin{document}\n")
+      text_file.write("\\nocite{*}\n")
+      text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
+      text_file.write("No publications.\n")
+      text_file.write("\\bibliographstyle{plain}\n")
+      text_file.write("\\end{document}\n")
+  # generate pdf file
+  os.system("pdflatex "+html_file)
+  os.system("bibtex "+html_file)
+  os.system("pdflatex "+html_file)
+  os.system("pdflatex "+html_file)
+
 def generate_full(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_full.html"
   if len(bibitems) > 0:
@@ -271,9 +297,10 @@ def generate_full(year, bibitems, bibcodes):
     with open(html_file, "w") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
-  with open(html_file, "a") as text_file:
+  #with open(html_file, "a") as text_file:
     #put a download button as bib file
-    text_file.write("<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_"+str(year)+"_"+current_month_text+"_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>")
+  #  text_file.write("<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_"+str(year)+"_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>")
+  generate_full_tex(year, bibitems)
 
 def generate_short(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_short.html"
@@ -544,10 +571,10 @@ def get_bibitems_year(file_name, year):
     #print("==== Bibcodes ==========\n")
     #for idx in range(len(bibcodes)):
     #  print("bibcodes[{0}] :{1}\n".format(idx, bibcodes[idx]))
-    file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+".bib"
+    file_name = "kgwg_publications_"+str(year)+".bib"
     with open(file_name, "w") as text_file:
       text_file.write("{0}".format(bibitems))
-    file_name = "kgwg_publications_"+str(year)+"_"+current_month_text+"_full.bib"
+    file_name = "kgwg_publications_"+str(year)+"_full.bib"
     with open(file_name, "w") as text_file:
       full_str = ''.join(map(str, bibitem_full))
       text_file.write("{0}".format(full_str))
