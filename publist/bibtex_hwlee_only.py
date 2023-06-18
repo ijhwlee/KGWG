@@ -206,6 +206,12 @@ def convert_journal(journal):
     return "New Astronomy Reviews"
   elif '\\memsai' in journal:
     return "Memorie della Societa Astronomica Italiana"
+  elif '\\pasj' in journal:
+    return "Publications of the Astronomical Society of Japan"
+  elif '\\jcp' in journal:
+    return "Journal of Chemical Physics"
+  elif '\\nat' in journal:
+    return "Nature"
   else:
     return journal
 
@@ -284,9 +290,12 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\nar}{New Astronomy Reviews}\n")
       text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
       text_file.write("\\newcommand{\\grl}{Geophysical Research Letters}\n")
+      text_file.write("\\newcommand{\\pasj}{Publications of the Astronomical Society of Japan}\n")
+      text_file.write("\\newcommand{\\texttimes}{X}\n")
+      text_file.write("{\\huge List of Publications year "+str(year)+"}\n")
       #text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("\\bibliographystyle{plain}\n")
-      text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full.bib}\n")
+      text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full}\n")
       text_file.write("\\end{document}\n")
   else:
     with open(html_file, "w", encoding="utf-8") as text_file:
@@ -294,6 +303,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\begin{document}\n")
       text_file.write("\\nocite{*}\n")
       text_file.write("\\newcommand{\\apjl}{Astrophys. J. Letter}\n")
+      text_file.write("{\\huge List of Publications year "+str(year)+"}\n")
       #text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("No publications.\n")
       text_file.write("\\bibliographystyle{plain}\n")
@@ -308,12 +318,14 @@ def generate_full(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_full.html"
   if len(bibitems) > 0:
     with open(html_file, "w", encoding="utf-8") as text_file:
+      text_file.write("<h1>Publication List for year "+str(year)+"</h1>\n")
       text_file.write("<ol>\n")
       for idx in range(len(bibitems)):
         generate_list_item(text_file, bibitems[idx], bibcodes[idx])
       text_file.write("</ol>\n")
   else:
     with open(html_file, "w", encoding="utf-8") as text_file:
+      text_file.write("<h1>Publication List for year "+str(year)+"</h1>\n")
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
   #with open(html_file, "a") as text_file:
@@ -574,6 +586,7 @@ def get_bibitems_year(file_name, year):
   if len(bibcodes) > 0:
     exports = {'bibcode':bibcodes , 'sort':'no sort', 'maxauthor':3}
     bibtex = requests.post(bibtex_url,  headers={'Authorization': 'Bearer ' + token, 'Content-Type':'application/json'}, json=exports)
+    print(bibtex)
     print(bibtex.json())
     total_papers = len(bibcodes)
     bibitems = bibtex.json()['export']
