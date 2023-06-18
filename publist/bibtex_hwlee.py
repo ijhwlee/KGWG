@@ -15,7 +15,7 @@ if os.path.exists(ads_key_file_name):
 else:
   print("ERROR- ADS API key file {0} does not exist, please specify a correct file name.".format(ads_key_file_name))
   exit(-1)
-with open(ads_key_file_name, "r") as key_file:
+with open(ads_key_file_name, "r", encoding="utf-8") as key_file:
   lines = key_file.read()
   keys = lines.split('\n')
 token = keys[0]
@@ -68,7 +68,7 @@ else:
 def get_extra_filter(file_name):
   exclude_journals = []
   if len(file_name) > 0:
-    with open(file_name, "r") as author_file:
+    with open(file_name, "r", encoding="utf-8") as author_file:
       lines = author_file.read()
       authors = lines.split('\n')
     exclude_journals = [author for author in authors if len(author)>0]
@@ -77,7 +77,7 @@ def get_extra_filter(file_name):
 def get_exclude_title_words(file_name):
   exclude_journals = []
   if len(file_name) > 0:
-    with open(file_name, "r") as author_file:
+    with open(file_name, "r", encoding="utf-8") as author_file:
       lines = author_file.read()
       authors = lines.split('\n')
     exclude_journals = [author for author in authors if len(author)>0]
@@ -86,7 +86,7 @@ def get_exclude_title_words(file_name):
 def get_exclude_journals(file_name):
   exclude_journals = []
   if len(file_name) > 0:
-    with open(file_name, "r") as author_file:
+    with open(file_name, "r", encoding="utf-8") as author_file:
       lines = author_file.read()
       authors = lines.split('\n')
     exclude_journals = [author for author in authors if len(author)>0]
@@ -95,7 +95,7 @@ def get_exclude_journals(file_name):
 def get_exclude_bibcodes(file_name):
   exclude_journals = []
   if len(file_name) > 0:
-    with open(file_name, "r") as author_file:
+    with open(file_name, "r", encoding="utf-8") as author_file:
       lines = author_file.read()
       authors = lines.split('\n')
     exclude_journals = [author for author in authors if len(author)>0]
@@ -188,6 +188,10 @@ def convert_journal(journal):
     return "Phys. Rev. A"
   elif '\\prb' in journal:
     return "Phys. Rev. B"
+  elif '\\prc' in journal:
+    return "Phys. Rev. C"
+  elif '\\pre' in journal:
+    return "Phys. Rev. E"
   elif '\\apj' in journal:
     return "Astro. Phys. J."
   elif '\\apjl' in journal:
@@ -202,6 +206,10 @@ def convert_journal(journal):
     return "New Astronomy Reviews"
   elif '\\memsai' in journal:
     return "Memorie della Societa Astronomica Italiana"
+  elif '\\grl' in journal:
+    return "Geophysical Research Letters"
+  elif '\\jcp' in journal:
+    return "The Journal of Chemical Physics"
   else:
     return journal
 
@@ -217,6 +225,8 @@ def get_journal(bibitem):
       ref_type = 'INPROCEEDINGS'
     elif 'PROCEEDINGS' in line:
       ref_type = 'PROCEEDINGS'
+    elif 'MISC' in line:
+      ref_type = 'MISC'
 
     if ref_type=='ARTICLE' and 'journal' in line:
       start = line.find('= {')
@@ -239,7 +249,12 @@ def get_journal(bibitem):
       end = line.find('},$')
       title = line[start+3: end-1]
       return title
-  return "NO TITLE"
+    if ref_type=='MISC' and 'howpublished' in line:
+      start = line.find('= {')
+      end = line.find('},$')
+      title = line[start+3: end-1]
+      return title
+  return "NO JOURNAL TITLE"
 
 def generate_list_item(text_file, bibitem, bibcode):
   text_file.write("<li>")
@@ -253,7 +268,7 @@ def generate_list_item(text_file, bibitem, bibcode):
 
 def generate_ol(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_ol.html"
-  with open(html_file, "w") as text_file:
+  with open(html_file, "w", encoding="utf-8") as text_file:
     text_file.write("<ol>\n")
     for idx in range(len(bibitems)):
       generate_list_item(text_file, bibitems[idx], bibcodes[idx])
@@ -261,43 +276,50 @@ def generate_ol(year, bibitems, bibcodes):
 
 def generate_full_tex(year, bibitems):
   html_file = "kgwg_publications_"+str(year)+"_full.tex"
+  html_file_root = "kgwg_publications_"+str(year)+"_full"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
-      text_file.write("\\documentclass{article}\n")
+    with open(html_file, "w", encoding="utf-8") as text_file:
+      text_file.write("\\documentclass{revtex4}\n")
       text_file.write("\\begin{document}\n")
       text_file.write("\\nocite{*}\n")
-      text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
-      text_file.write("\\bibliographstyle{plain}\n")
+      text_file.write("\\newcommand{\\apjl}{Astrophys. J. Lett.}\n")
+      text_file.write("\\newcommand{\\aap}{Astron. \& Astrophys. J.}\n")
+      text_file.write("\\newcommand{\\mnras}{Mon. Not. R. Astron. Soc.}\n")
+      text_file.write("\\newcommand{\\nar}{New Astronomy Reviews}\n")
+      text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
+      #text_file.write("\\renewcommand\\bibname{List of Collaboration Papers Year "+str(year)+"}\n")
+      text_file.write("\\bibliographystyle{plain}\n")
       text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full.bib}\n")
       text_file.write("\\end{document}\n")
   else:
-    with open(html_file, "w") as text_file:
-      text_file.write("\\documentclass{article}\n")
+    with open(html_file, "w", encoding="utf-8") as text_file:
+      text_file.write("\\documentclass{revtex4}\n")
       text_file.write("\\begin{document}\n")
       text_file.write("\\nocite{*}\n")
-      text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
+      text_file.write("\\newcommand{\\apjl}{Astrophys J. Lett.}\n")
+      #text_file.write("\\renewcommand\\bibname{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("No publications.\n")
-      text_file.write("\\bibliographstyle{plain}\n")
+      text_file.write("\\bibliographystyle{plain}\n")
       text_file.write("\\end{document}\n")
   # generate pdf file
-  os.system("pdflatex "+html_file)
-  os.system("bibtex "+html_file)
-  os.system("pdflatex "+html_file)
-  os.system("pdflatex "+html_file)
+  #os.system("pdflatex "+html_file)
+  #os.system("bibtex "+html_file_root)
+  #os.system("pdflatex "+html_file)
+  #os.system("pdflatex "+html_file)
 
 def generate_full(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_full.html"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<ol>\n")
       for idx in range(len(bibitems)):
         generate_list_item(text_file, bibitems[idx], bibcodes[idx])
       text_file.write("</ol>\n")
   else:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
-  #with open(html_file, "a") as text_file:
+  #with open(html_file, "a", encoding="utf-8") as text_file:
     #put a download button as bib file
   #  text_file.write("<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_"+str(year)+"_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>")
   generate_full_tex(year, bibitems)
@@ -305,13 +327,13 @@ def generate_full(year, bibitems, bibcodes):
 def generate_short(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_short.html"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<ol>\n")
       for idx in range(len(bibitems)):
         generate_list_item(text_file, bibitems[idx], bibcodes[idx])
       text_file.write("</ol>\n")
   else:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
 
@@ -319,7 +341,7 @@ def generate_short(year, bibitems, bibcodes):
 def generate_html(year, bibitems_full, bibcodes_full, bibitems_short, bibcodes_short):
   html_file = "kgwg_publications_"+str(year)+".html"
   ol_file = "kgwg_publications_"+str(year)+"_ol.html"
-  with open(html_file, "w") as text_file:
+  with open(html_file, "w", encoding="utf-8") as text_file:
     text_file.write("<!DOCTYPE html>\n<html>\n<head>\n<meta charset='UTF-8'>\n<title>Year {0}: List of Publications for KGWG</title></head>\n".format(year))
     # writing script
     text_file.write("<script type=\"text/javascript\" src=\"./includeHtml.js\"></script>\n")
@@ -379,7 +401,7 @@ def get_bibcodes(author, year):
   return bibcodes
 
 def get_authors(file_name):
-  with open(file_name, "r") as author_file:
+  with open(file_name, "r", encoding="utf-8") as author_file:
     lines = author_file.read()
     authors = lines.split('\n')
   authors0 = [author for author in authors if len(author)>0]
@@ -572,10 +594,10 @@ def get_bibitems_year(file_name, year):
     #for idx in range(len(bibcodes)):
     #  print("bibcodes[{0}] :{1}\n".format(idx, bibcodes[idx]))
     file_name = "kgwg_publications_"+str(year)+".bib"
-    with open(file_name, "w") as text_file:
+    with open(file_name, "w", encoding="utf-8") as text_file:
       text_file.write("{0}".format(bibitems))
     file_name = "kgwg_publications_"+str(year)+"_full.bib"
-    with open(file_name, "w") as text_file:
+    with open(file_name, "w", encoding="utf-8") as text_file:
       full_str = ''.join(map(str, bibitem_full))
       text_file.write("{0}".format(full_str))
     #generate_html(year, bibitems2, bibcodes)
