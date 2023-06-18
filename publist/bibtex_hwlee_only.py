@@ -294,7 +294,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\texttimes}{X}\n")
       text_file.write("{\\huge List of Publications year "+str(year)+"}\n")
       #text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
-      text_file.write("\\bibliographystyle{plain}\n")
+      text_file.write("\\bibliographystyle{unsrt}\n")
       text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full}\n")
       text_file.write("\\end{document}\n")
   else:
@@ -306,7 +306,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("{\\huge List of Publications year "+str(year)+"}\n")
       #text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("No publications.\n")
-      text_file.write("\\bibliographystyle{plain}\n")
+      text_file.write("\\bibliographystyle{unsrt}\n")
       text_file.write("\\end{document}\n")
   # generate pdf file
   os.system("pdflatex "+html_file)
