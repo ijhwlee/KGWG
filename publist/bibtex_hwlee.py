@@ -291,6 +291,8 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\mnras}{Mon. Not. R. Astron. Soc.}\n")
       text_file.write("\\newcommand{\\nar}{New Astronomy Reviews}\n")
       text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
+      text_file.write("\\newcommand{\\grl}{Geophysical Research Letters}\n")
+      text_file.write("\\newcommand{\\pasj}{Publications of the Astronomical Society of Japan}\n")
       text_file.write("{\\huge KGWG Collaboration Paper List for Year "+str(year)+"}\n")
       text_file.write("\\bibliographystyle{unsrt}\n")
       text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full}\n")
