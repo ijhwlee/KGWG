@@ -292,7 +292,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\nar}{New Astronomy Reviews}\n")
       text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
       text_file.write("{\\huge KGWG Collaboration Paper List for Year "+str(year)+"}\n")
-      text_file.write("\\bibliographystyle{plain}\n")
+      text_file.write("\\bibliographystyle{unsrt}\n")
       text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full}\n")
       text_file.write("\\end{document}\n")
   else:
@@ -303,7 +303,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\apjl}{Astrophys J. Lett.}\n")
       text_file.write("{\\huge KGWG Collaboration Paper List for Year "+str(year)+"}\n")
       text_file.write("No publications.\n")
-      text_file.write("\\bibliographystyle{plain}\n")
+      text_file.write("\\bibliographystyle{unsrt}\n")
       text_file.write("\\end{document}\n")
   # generate pdf file
   #os.system("pdflatex "+html_file)
