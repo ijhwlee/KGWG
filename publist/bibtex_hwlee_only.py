@@ -188,6 +188,10 @@ def convert_journal(journal):
     return "Phys. Rev. A"
   elif '\\prb' in journal:
     return "Phys. Rev. B"
+  elif '\\prc' in journal:
+    return "Phys. Rev. C"
+  elif '\\pre' in journal:
+    return "Phys. Rev. E"
   elif '\\apj' in journal:
     return "Astro. Phys. J."
   elif '\\apjl' in journal:
@@ -217,6 +221,8 @@ def get_journal(bibitem):
       ref_type = 'INPROCEEDINGS'
     elif 'PROCEEDINGS' in line:
       ref_type = 'PROCEEDINGS'
+    elif 'MISC' in line:
+      ref_type = 'MISC'
 
     if ref_type=='ARTICLE' and 'journal' in line:
       start = line.find('= {')
@@ -239,7 +245,12 @@ def get_journal(bibitem):
       end = line.find('},$')
       title = line[start+3: end-1]
       return title
-  return "NO TITLE"
+    if ref_type=='MISC' and 'howpublished' in line:
+      start = line.find('= {')
+      end = line.find('},$')
+      title = line[start+3: end-1]
+      return title
+  return "NO JOURNAL TITLE"
 
 def generate_list_item(text_file, bibitem, bibcode):
   text_file.write("<li>")
@@ -253,7 +264,7 @@ def generate_list_item(text_file, bibitem, bibcode):
 
 def generate_ol(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_ol.html"
-  with open(html_file, "w") as text_file:
+  with open(html_file, "w", encoding="utf-8") as text_file:
     text_file.write("<ol>\n")
     for idx in range(len(bibitems)):
       generate_list_item(text_file, bibitems[idx], bibcodes[idx])
@@ -263,7 +274,7 @@ def generate_full_tex(year, bibitems):
   html_file = "kgwg_publications_"+str(year)+"_full.tex"
   html_file_root = "kgwg_publications_"+str(year)+"_full"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("\\documentclass{revtex4}\n")
       text_file.write("\\begin{document}\n")
       text_file.write("\\nocite{*}\n")
@@ -272,12 +283,13 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\mnras}{Mon. Not. R. Astron. Soc.}\n")
       text_file.write("\\newcommand{\\nar}{New Astronomy Reviews}\n")
       text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
+      text_file.write("\\newcommand{\\grl}{Geophysical Research Letters}\n")
       #text_file.write("\\renewcommand{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("\\bibliographystyle{plain}\n")
       text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full.bib}\n")
       text_file.write("\\end{document}\n")
   else:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("\\documentclass{revtex4}\n")
       text_file.write("\\begin{document}\n")
       text_file.write("\\nocite{*}\n")
@@ -295,13 +307,13 @@ def generate_full_tex(year, bibitems):
 def generate_full(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_full.html"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<ol>\n")
       for idx in range(len(bibitems)):
         generate_list_item(text_file, bibitems[idx], bibcodes[idx])
       text_file.write("</ol>\n")
   else:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
   #with open(html_file, "a") as text_file:
@@ -312,13 +324,13 @@ def generate_full(year, bibitems, bibcodes):
 def generate_short(year, bibitems, bibcodes):
   html_file = "kgwg_publications_"+str(year)+"_short.html"
   if len(bibitems) > 0:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<ol>\n")
       for idx in range(len(bibitems)):
         generate_list_item(text_file, bibitems[idx], bibcodes[idx])
       text_file.write("</ol>\n")
   else:
-    with open(html_file, "w") as text_file:
+    with open(html_file, "w", encoding="utf-8") as text_file:
       text_file.write("<p>\n")
       text_file.write("No publications found.</p>\n")
 
@@ -326,7 +338,7 @@ def generate_short(year, bibitems, bibcodes):
 def generate_html(year, bibitems_full, bibcodes_full, bibitems_short, bibcodes_short):
   html_file = "kgwg_publications_"+str(year)+".html"
   ol_file = "kgwg_publications_"+str(year)+"_ol.html"
-  with open(html_file, "w") as text_file:
+  with open(html_file, "w", encoding="utf-8") as text_file:
     text_file.write("<!DOCTYPE html>\n<html>\n<head>\n<meta charset='UTF-8'>\n<title>Year {0}: List of Publications for KGWG</title></head>\n".format(year))
     # writing script
     text_file.write("<script type=\"text/javascript\" src=\"./includeHtml.js\"></script>\n")
@@ -466,6 +478,8 @@ def mk_link_string(bibitem, add_title):
   link_string += "</span>"
   if add_title:
     title = get_title(bibitem)
+    if title is None:
+      title = "No Title"
     if len(title) > 0:
       link_string += ", <span style=\"color: black;\">\""+title+"\"</span>"
   return link_string
@@ -492,7 +506,11 @@ def exclude_title_words(bibitems, bibcodes, journals):
   bibitems_new = []
   bibcodes_new = []
   for idx in range(len(bibitems)):
-    journal = get_title(bibitems[idx]).upper()
+    #print("bibitems[{0}] = {1}".format(idx, bibitems[idx]))
+    if get_title(bibitems[idx]) is None:
+      journal = "No title"
+    else:
+      journal = get_title(bibitems[idx]).upper()
     exclude = False
     for idx1 in range(len(journals)):
       journal1 = journals[idx1].upper()
@@ -581,10 +599,11 @@ def get_bibitems_year(file_name, year):
     #for idx in range(len(bibcodes)):
     #  print("bibcodes[{0}] :{1}\n".format(idx, bibcodes[idx]))
     file_name = "kgwg_publications_"+str(year)+".bib"
-    with open(file_name, "w") as text_file:
+    bibitems.replace('\u2011', '-')
+    with open(file_name, "w", encoding="utf-8") as text_file:
       text_file.write("{0}".format(bibitems))
     file_name = "kgwg_publications_"+str(year)+"_full.bib"
-    with open(file_name, "w") as text_file:
+    with open(file_name, "w", encoding="utf-8") as text_file:
       full_str = ''.join(map(str, bibitem_full))
       text_file.write("{0}".format(full_str))
     #generate_html(year, bibitems2, bibcodes)
