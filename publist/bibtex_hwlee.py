@@ -210,6 +210,10 @@ def convert_journal(journal):
     return "Geophysical Research Letters"
   elif '\\jcp' in journal:
     return "The Journal of Chemical Physics"
+  elif '\\pasj' in journal:
+    return "Publications of the Astronomical Society of Japan"
+  elif '\\nat' in journal:
+    return "Nature"
   else:
     return journal
 
