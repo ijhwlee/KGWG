@@ -293,7 +293,7 @@ def generate_full_tex(year, bibitems):
       text_file.write("\\newcommand{\\memsai}{Memorie della Societa Astronomica Italiana}\n")
       #text_file.write("\\renewcommand\\bibname{List of Collaboration Papers Year "+str(year)+"}\n")
       text_file.write("\\bibliographystyle{plain}\n")
-      text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full.bib}\n")
+      text_file.write("\\bibliography{kgwg_publications_"+str(year)+"_full}\n")
       text_file.write("\\end{document}\n")
   else:
     with open(html_file, "w", encoding="utf-8") as text_file:
