@@ -49,7 +49,8 @@ function wpb_kgwg_publications($attrs) {
     fclose($myfile);
     $message = '<h1>Collaboration Papers</h1>';
     $message .= $content;
-    $message .= "<div class=\"wp-block-file\"><a href=\"https://www2.kgwg.org/publications/kgwg_publications_".$pub_year."_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>";
+    //$message .= "<div class=\"wp-block-file\"><a href=\"https://www.kgwg.org/publications/kgwg_publications_".$pub_year."_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a></div>";
+    $message .= "<div class=\"wp-block-file\"><a href=\"".home_url( $wp->request )."/publications/kgwg_publications_".$pub_year."_full.bib\" class=\"wp-block-file__button wp-element-button\" download>Downlaod bib</a><a href=\"".home_url( $wp->request )."/publications/kgwg_publications_".$pub_year."_full.pdf\" class=\"wp-block-file__button wp-element-button\" download>Downlaod pdf</a></div>";
     if ($no_short) {
       return $message;
     }
@@ -73,7 +74,7 @@ function wpb_kgwg_publications($attrs) {
   }
   else {
   // using separate short author pages
-    $message .= '<h1><a href="https://www2.kgwg.org/gw-short-authored-papers/?pub_year='.$pub_year.'">GW Short-authored Paper List</a></h1>';
+    $message .= '<h1><a href="'.home_url( $wp->request ).'/gw-short-authored-papers/?pub_year='.$pub_year.'">GW Short-authored Paper List</a></h1>';
   }
 
   return $message;
