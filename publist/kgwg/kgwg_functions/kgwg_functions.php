@@ -169,6 +169,13 @@ function wpb_kgwg_change_title() {
 }
 add_shortcode('change_title', 'wpb_kgwg_change_title');
 
+function wpb_kgwg_redirect_current() {
+  $year = date("Y");
+  $message = '<script>window.location.href = "https://www.kgwg.org/list-of-publications-for-kgwg-in-year-2018/?pub_year='.$year.'"</script>';
+  return $message;
+}
+add_shortcode('redirect_current', 'wpb_kgwg_redirect_current');
+
 function wpb_kgwg_add_bootstrap() {
   // Register style & scripts
   //wp_register_style('kgwg-bootstrap-style', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
